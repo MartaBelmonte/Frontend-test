@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { GoogleMap, LoadScript } from '@react-google-maps/api';
 
-const Map = ({ googleMapsApiKey }) => {
+const Map = ({ googleMapsApiKey, key, searches }) => {
   const location = useLocation();
-  const [searches, setSearches] = useState(new Set());
   const [map, setMap] = useState(null);
   const [address, setAddress] = useState('');
+  const [searchHistory, setSearchHistory] = useState([]);
   const [searchTimeout, setSearchTimeout] = useState(null);
+  let marker = null; // Mover la declaración del marcador fuera del useEffect
 
   useEffect(() => {
     const mapElement = document.getElementById('map');
@@ -22,11 +23,10 @@ const Map = ({ googleMapsApiKey }) => {
       const address = params.get('address');
 
       if (!isNaN(lat) && !isNaN(lng) && address) {
-        const updatedSearches = new Set([...searches, address]);
-        setSearches(updatedSearches);
+        setAddress(address);
+        setSearchHistory((prevHistory) => [...prevHistory, address]);
       }
 
-      // Revisamos si el mapa ya fue creado
       if (!mapElement.dataset.mapInitialized) {
         const newMap = new google.maps.Map(mapElement, {
           center: { lat, lng },
@@ -35,31 +35,25 @@ const Map = ({ googleMapsApiKey }) => {
 
         setMap(newMap);
 
-        // Crear el marcador
-        const marker = new google.maps.Marker({
+        // Crear el marcador una vez cuando se inicializa el mapa
+        marker = new google.maps.Marker({
           map: newMap,
           position: { lat, lng },
         });
 
-        // Marcamos que el mapa fue inicializado
         mapElement.dataset.mapInitialized = 'true';
       }
     }
-  }, [location, map, googleMapsApiKey, searches]);
+  }, [location, map, googleMapsApiKey]);
 
   const handleSearch = async () => {
     if (address.trim() !== '') {
-      const updatedSearches = new Set([...searches, address]);
-      setSearches(updatedSearches);
-
-      // Realizar búsqueda en el mapa
       await performMapSearch(address);
+      setSearchHistory((prevHistory) => [...prevHistory, address]);
     }
   };
 
   const performMapSearch = async (searchAddress) => {
-    let marker; // Definir marker como variable local
-
     try {
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
@@ -69,23 +63,24 @@ const Map = ({ googleMapsApiKey }) => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Respuesta de la API de Google Maps:', data);
 
         if (data.results.length > 0) {
           const location = data.results[0].geometry.location;
-          // Actualizar el mapa con la nueva ubicación
+
           if (map) {
             map.setCenter(location);
             map.setZoom(8);
 
-            // Actualizar la posición del marcador
+            if (marker) {
+              marker.setMap(null);
+            }
+
             marker = new window.google.maps.Marker({
               map: map,
               position: location,
             });
           }
         } else {
-          // No hay resultados válidos
           console.error('No se encontró información de ubicación para la dirección proporcionada.');
         }
       } else {
@@ -96,19 +91,16 @@ const Map = ({ googleMapsApiKey }) => {
     }
   };
 
-  // Manejar cambios en el campo de dirección para realizar búsquedas en tiempo real
   const handleChange = (e) => {
     setAddress(e.target.value);
 
-    // Cancelar el temporizador existente
     if (searchTimeout) {
       clearTimeout(searchTimeout);
     }
 
-    // Configurar un nuevo temporizador para realizar la búsqueda después de un breve retraso
     const newTimeout = setTimeout(() => {
       performMapSearch(e.target.value);
-    }, 500); // 500 milisegundos (ajusta según sea necesario)
+    }, 500);
 
     setSearchTimeout(newTimeout);
   };
@@ -117,7 +109,6 @@ const Map = ({ googleMapsApiKey }) => {
     <div>
       <h1>Mapa</h1>
       <div>
-        {/* Formulario de búsqueda */}
         <input
           type="text"
           placeholder="Introduce una dirección"
@@ -127,8 +118,8 @@ const Map = ({ googleMapsApiKey }) => {
         <button onClick={handleSearch}>Buscar</button>
       </div>
       <div id="map" style={{ height: '400px', width: '400px' }}>
-        {/* Mapa */}
         <GoogleMap
+          key={key}
           mapContainerStyle={{ height: '100%', width: '100%' }}
           center={{ lat: 0, lng: 0 }}
           zoom={8}
@@ -136,7 +127,7 @@ const Map = ({ googleMapsApiKey }) => {
       </div>
       <h2>Búsquedas realizadas en esta sesión:</h2>
       <ul>
-        {[...searches].map((search, index) => (
+        {searchHistory.map((search, index) => (
           <li key={index}>{search}</li>
         ))}
       </ul>
@@ -145,49 +136,4 @@ const Map = ({ googleMapsApiKey }) => {
 };
 
 export default Map;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
