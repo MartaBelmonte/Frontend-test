@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Map from '../map/Map';
+import Logo from '../../images/logo_brickbro.png'
 
 const Home = () => {
   const [address, setAddress] = useState('');
@@ -41,15 +42,20 @@ const Home = () => {
   };
 
   return (
-    <div>
-      <h1>Geolocalizador de Direcciones</h1>
-      <input
-        type="text"
-        placeholder="Introduce una dirección"
-        value={address}
-        onChange={(e) => setAddress(e.target.value)}
-      />
-      <button onClick={handleSearch}>Buscar</button>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <img src={Logo} alt="Logo" style={{ width: '300px', height: '100px', padding: '40px', marginBottom: '15px' }} />
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
+        <input
+          type="text"
+          placeholder="Introduce una dirección"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          style={{ marginRight: '15px', padding: '10px', fontSize: '15px', width: '320px' }}
+        />
+        <button onClick={handleSearch} style={{ padding: '8px', fontSize: '15px', width: '100px' }}>
+          Search
+        </button>
+      </div>
 
       {searchSuccess && <Map key={mapKey} searches={searches} />}
     </div>

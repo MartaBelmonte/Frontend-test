@@ -1,108 +1,117 @@
-import React, { useEffect, useState } from 'react';
+/* global google */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable no-undef */
+
+import React, { useEffect, useState, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { GoogleMap, LoadScript } from '@react-google-maps/api';
 
-const Map = ({ googleMapsApiKey, key, searches }) => {
+const Map = ({ googleMapsApiKey }) => {
   const location = useLocation();
   const [map, setMap] = useState(null);
   const [address, setAddress] = useState('');
-  const [searchHistory, setSearchHistory] = useState([]);
+  const [searchHistory, setSearchHistory] = useState(new Set()); // Usar un conjunto en lugar de un array
   const [searchTimeout, setSearchTimeout] = useState(null);
-  let marker = null; // Mover la declaración del marcador fuera del useEffect
+  const [markers, setMarkers] = useState([]);
+  const [infoWindow, setInfoWindow] = useState(null);
+
+  const mapInitializedRef = useRef(false);
 
   useEffect(() => {
     const mapElement = document.getElementById('map');
 
     if (mapElement && window.google) {
       const { google } = window;
-
       const { search } = location;
       const params = new URLSearchParams(search);
       const lat = parseFloat(params.get('lat')) || 0;
       const lng = parseFloat(params.get('lng')) || 0;
-      const address = params.get('address');
+      const currentAddress = params.get('address');
 
-      if (!isNaN(lat) && !isNaN(lng) && address) {
-        setAddress(address);
-        setSearchHistory((prevHistory) => [...prevHistory, address]);
+      if (!isNaN(lat) && !isNaN(lng) && currentAddress) {
+        setAddress(currentAddress);
+        setSearchHistory((prevHistory) => new Set(prevHistory).add(currentAddress)); // Añadir al conjunto
       }
 
-      if (!mapElement.dataset.mapInitialized) {
-        const newMap = new google.maps.Map(mapElement, {
+      let newMap = map;
+
+      if (!map) {
+        newMap = new google.maps.Map(mapElement, {
           center: { lat, lng },
           zoom: 8,
         });
 
         setMap(newMap);
-
-        // Crear el marcador una vez cuando se inicializa el mapa
-        marker = new google.maps.Marker({
-          map: newMap,
-          position: { lat, lng },
-        });
-
-        mapElement.dataset.mapInitialized = 'true';
+      } else {
+        newMap.panTo({ lat, lng });
+        newMap.setZoom(8);
       }
+
+      setInfoWindow(new google.maps.InfoWindow({ maxWidth: 350 }));
     }
-  }, [location, map, googleMapsApiKey]);
+  }, [location, googleMapsApiKey, map]);
+
+  const clearMarkers = () => {
+    markers.forEach((marker) => marker.setMap(null));
+    setMarkers([]);
+  };
+
+  const addMarker = (location) => {
+    const { google } = window;
+
+    const newMarker = new google.maps.Marker({
+      icon: 'http://maps.google.com/mapfiles/ms/icons/blue.png',
+      map: map,
+      position: { lat: location.lat, lng: location.lng },
+      title: location.name,
+      animation: google.maps.Animation.DROP,
+    });
+
+    setMarkers((prevMarkers) => [...prevMarkers, newMarker]);
+
+    google.maps.event.addListener(newMarker, 'click', function () {
+      const content = `<div><h3>${location.name}</h3><p>${location.address}<br><a href="${location.url}">Get Directions</a></p></div>`;
+      infoWindow.setContent(content);
+      infoWindow.open(map, newMarker);
+    });
+  };
+
+  useEffect(() => {
+    if (markers.length > 0) {
+      const bounds = new window.google.maps.LatLngBounds();
+      markers.forEach((marker) => bounds.extend(marker.getPosition()));
+      map.fitBounds(bounds);
+    }
+  }, [markers, map]);
 
   const handleSearch = async () => {
     if (address.trim() !== '') {
-      await performMapSearch(address);
-      setSearchHistory((prevHistory) => [...prevHistory, address]);
-    }
-  };
+      const geocoder = new google.maps.Geocoder();
 
-  const performMapSearch = async (searchAddress) => {
-    try {
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-          searchAddress
-        )}&key=${googleMapsApiKey}`
-      );
+      geocoder.geocode({ address }, (results, status) => {
+        if (status === google.maps.GeocoderStatus.OK) {
+          const location = results[0].geometry.location;
+          const newLocation = {
+            name: 'New Location',
+            address,
+            lat: location.lat(),
+            lng: location.lng(),
+            url: `https://goo.gl/maps/${location.lat()},${location.lng()}`,
+          };
 
-      if (response.ok) {
-        const data = await response.json();
-
-        if (data.results.length > 0) {
-          const location = data.results[0].geometry.location;
-
-          if (map) {
-            map.setCenter(location);
-            map.setZoom(8);
-
-            if (marker) {
-              marker.setMap(null);
-            }
-
-            marker = new window.google.maps.Marker({
-              map: map,
-              position: location,
-            });
-          }
+          addMarker(newLocation);
         } else {
-          console.error('No se encontró información de ubicación para la dirección proporcionada.');
+          console.error(`Geocode of ${address} failed: ${status}`);
         }
-      } else {
-        console.error('Error al obtener datos:', response.statusText);
-      }
-    } catch (error) {
-      console.error('Error:', error);
+      });
+
+      setSearchHistory((prevHistory) => new Set(prevHistory).add(address)); // Añadir al conjunto
     }
   };
 
   const handleChange = (e) => {
-    setAddress(e.target.value);
-
-    if (searchTimeout) {
-      clearTimeout(searchTimeout);
-    }
-
-    const newTimeout = setTimeout(() => {
-      performMapSearch(e.target.value);
-    }, 500);
-
-    setSearchTimeout(newTimeout);
+    const newAddress = e.target.value;
+    setAddress(newAddress);
   };
 
   return (
@@ -119,15 +128,14 @@ const Map = ({ googleMapsApiKey, key, searches }) => {
       </div>
       <div id="map" style={{ height: '400px', width: '400px' }}>
         <GoogleMap
-          key={key}
-          mapContainerStyle={{ height: '100%', width: '100%' }}
+          mapContainerStyle={{ height: '100%', width: '400px' }}
           center={{ lat: 0, lng: 0 }}
           zoom={8}
         ></GoogleMap>
       </div>
       <h2>Búsquedas realizadas en esta sesión:</h2>
       <ul>
-        {searchHistory.map((search, index) => (
+        {[...searchHistory].map((search, index) => (
           <li key={index}>{search}</li>
         ))}
       </ul>
@@ -136,4 +144,18 @@ const Map = ({ googleMapsApiKey, key, searches }) => {
 };
 
 export default Map;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
