@@ -5,6 +5,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { GoogleMap, LoadScript } from '@react-google-maps/api';
+import Logo from '../../images/logo_brickbro.png'
 
 const Map = ({ googleMapsApiKey }) => {
   const location = useLocation();
@@ -115,30 +116,35 @@ const Map = ({ googleMapsApiKey }) => {
   };
 
   return (
-    <div>
-      <h1>Mapa</h1>
-      <div>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+      <img src={Logo} alt="Logo" style={{ width: '200px', height: '80px', padding: '40px', marginBottom: '15px', alignSelf: 'flex-start' }} />
+      <div style={{ marginBottom: '15px' }}>
         <input
           type="text"
-          placeholder="Introduce una dirección"
+          placeholder="Address"
           value={address}
           onChange={handleChange}
+          style={{ marginRight: '15px', padding: '10px', fontSize: '15px', width: '320px', backgroundColor: 'lightgray', }}
         />
-        <button onClick={handleSearch}>Buscar</button>
+        <button onClick={handleSearch} style={{ padding: '8px', fontSize: '15px', width: '130px' }}>
+          Search
+        </button>
       </div>
-      <div id="map" style={{ height: '400px', width: '400px' }}>
+      <div id="map" style={{ width: '530px', height: '400px', border: '2px solid black' }}>
         <GoogleMap
-          mapContainerStyle={{ height: '100%', width: '400px' }}
+          mapContainerStyle={{ height: '100%', width: '100%' }}
           center={{ lat: 0, lng: 0 }}
           zoom={8}
         ></GoogleMap>
       </div>
-      <h2>Búsquedas realizadas en esta sesión:</h2>
-      <ul>
-        {[...searchHistory].map((search, index) => (
-          <li key={index}>{search}</li>
-        ))}
-      </ul>
+      <div style={{ margin: '20px', border: '2px solid grey', padding: '10px', width: '520px', textAlign: 'left', marginLeft: '10px' }}>
+        <h2 style={{ color: 'gray', fontSize: '14px', marginLeft: '9px' }}>Búsquedas</h2>
+        <ul style={{ marginLeft: '10px', listStyle: 'none', marginLeft: '-30px' }}>
+          {[...searchHistory].map((search, index) => (
+            <li key={index} style={{marginBottom: '8px', fontSize: '14px'}}>{search}</li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 };

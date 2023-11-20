@@ -47,12 +47,12 @@ const Home = () => {
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
         <input
           type="text"
-          placeholder="Introduce una dirección"
+          placeholder="Adress"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
-          style={{ marginRight: '15px', padding: '10px', fontSize: '15px', width: '320px' }}
+          style={{ marginRight: '15px', padding: '10px', fontSize: '15px', width: '320px', backgroundColor: 'lightgray' }}
         />
-        <button onClick={handleSearch} style={{ padding: '8px', fontSize: '15px', width: '100px' }}>
+        <button onClick={handleSearch} style={{ padding: '8px', fontSize: '15px', width: '130px' }}>
           Search
         </button>
       </div>
