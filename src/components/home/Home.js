@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Map from '../map/Map';
-import Logo from '../../images/logo_brickbro.png'
+import Logo from '../../images/logo_brickbro.png'; 
+import '../../styles/App.css';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSearch } from '@fortawesome/free-solid-svg-icons';
 
 const Home = () => {
   const [address, setAddress] = useState('');
@@ -16,7 +19,7 @@ const Home = () => {
         const response = await fetch(
           `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
             address
-          )}&key=AIzaSyAxMst2ofWb1PLfmLH050Aee0HsyjiGibE` // Reemplaza con tu clave de API de Google Maps
+          )}&key=AIzaSyAxMst2ofWb1PLfmLH050Aee0HsyjiGibE`
         );
 
         if (response.ok) {
@@ -42,27 +45,28 @@ const Home = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <img src={Logo} alt="Logo" style={{ width: '300px', height: '100px', padding: '40px', marginBottom: '15px' }} />
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
-        <input
+    <div className="home-container">
+      <img src={Logo} alt="Logo" className="logo-home" />
+      <div className="search-container-home">
+        <FontAwesomeIcon icon={faSearch} className="search-icon-home" /> 
+        <input 
           type="text"
-          placeholder="Adress"
+          placeholder="Address"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
-          style={{ marginRight: '15px', padding: '10px', fontSize: '15px', width: '320px', backgroundColor: 'lightgray' }}
+          className="address-input" 
         />
-        <button onClick={handleSearch} style={{ padding: '8px', fontSize: '15px', width: '130px' }}>
+        <button onClick={handleSearch} className="search-button">
           Search
         </button>
       </div>
-
       {searchSuccess && <Map key={mapKey} searches={searches} />}
     </div>
   );
 };
 
 export default Home;
+
 
 
 

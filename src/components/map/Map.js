@@ -5,13 +5,16 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { GoogleMap, LoadScript } from '@react-google-maps/api';
-import Logo from '../../images/logo_brickbro.png'
+import Logo from '../../images/logo_brickbro.png';
+import '../../styles/App.css';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSearch } from '@fortawesome/free-solid-svg-icons';
 
 const Map = ({ googleMapsApiKey }) => {
   const location = useLocation();
   const [map, setMap] = useState(null);
   const [address, setAddress] = useState('');
-  const [searchHistory, setSearchHistory] = useState(new Set()); // Usar un conjunto en lugar de un array
+  const [searchHistory, setSearchHistory] = useState(new Set()); 
   const [searchTimeout, setSearchTimeout] = useState(null);
   const [markers, setMarkers] = useState([]);
   const [infoWindow, setInfoWindow] = useState(null);
@@ -106,7 +109,7 @@ const Map = ({ googleMapsApiKey }) => {
         }
       });
 
-      setSearchHistory((prevHistory) => new Set(prevHistory).add(address)); // Añadir al conjunto
+      setSearchHistory((prevHistory) => new Set(prevHistory).add(address)); 
     }
   };
 
@@ -116,32 +119,33 @@ const Map = ({ googleMapsApiKey }) => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-      <img src={Logo} alt="Logo" style={{ width: '200px', height: '80px', padding: '40px', marginBottom: '15px', alignSelf: 'flex-start' }} />
-      <div style={{ marginBottom: '15px' }}>
+    <div className="map-container">
+      <img src={Logo} alt="Logo" className="logo-map" />
+      <div className="search-container-map">
+        <FontAwesomeIcon icon={faSearch} className="search-icon-map" />
         <input
           type="text"
           placeholder="Address"
           value={address}
           onChange={handleChange}
-          style={{ marginRight: '15px', padding: '10px', fontSize: '15px', width: '320px', backgroundColor: 'lightgray', }}
+          className="address-input"
         />
-        <button onClick={handleSearch} style={{ padding: '8px', fontSize: '15px', width: '130px' }}>
+        <button onClick={handleSearch} className="search-button">
           Search
         </button>
       </div>
-      <div id="map" style={{ width: '530px', height: '400px', border: '2px solid black' }}>
+      <div id="map" className="google-map">
         <GoogleMap
           mapContainerStyle={{ height: '100%', width: '100%' }}
           center={{ lat: 0, lng: 0 }}
           zoom={8}
         ></GoogleMap>
       </div>
-      <div style={{ margin: '20px', border: '2px solid grey', padding: '10px', width: '520px', textAlign: 'left', marginLeft: '10px' }}>
-        <h2 style={{ color: 'gray', fontSize: '14px', marginLeft: '9px' }}>Búsquedas</h2>
-        <ul style={{ marginLeft: '10px', listStyle: 'none', marginLeft: '-30px' }}>
+      <div className="search-history">
+        <h2>Búsquedas</h2>
+        <ul>
           {[...searchHistory].map((search, index) => (
-            <li key={index} style={{marginBottom: '8px', fontSize: '14px'}}>{search}</li>
+            <li key={index}>{search}</li>
           ))}
         </ul>
       </div>
