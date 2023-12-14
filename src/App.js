@@ -7,7 +7,7 @@ import Map from './components/map/Map';
 const App = () => {
   return (
     <div>
-      <LoadScript googleMapsApiKey="AIzaSyAxMst2ofWb1PLfmLH050Aee0HsyjiGibE">
+      <LoadScript googleMapsApiKey="AIzaSyD57oAoC-On2NYZjQwvzH4qdtXYytopwL0">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/map" element={<Map />} />

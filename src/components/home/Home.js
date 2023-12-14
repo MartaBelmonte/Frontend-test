@@ -6,6 +6,7 @@ import '../../styles/App.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 
+
 const Home = () => {
   const [address, setAddress] = useState('');
   const [searches, setSearches] = useState([]);
@@ -19,7 +20,7 @@ const Home = () => {
         const response = await fetch(
           `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
             address
-          )}&key=AIzaSyAxMst2ofWb1PLfmLH050Aee0HsyjiGibE`
+          )}&key=AIzaSyD57oAoC-On2NYZjQwvzH4qdtXYytopwL0`
         );
 
         if (response.ok) {

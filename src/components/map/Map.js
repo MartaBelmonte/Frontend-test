@@ -11,7 +11,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 
 const Map = ({ googleMapsApiKey }) => {
+  // Obtener la ubicación actual de la ruta
   const location = useLocation();
+  
+  // Estados para gestionar la información del mapa
   const [map, setMap] = useState(null);
   const [address, setAddress] = useState('');
   const [searchHistory, setSearchHistory] = useState(new Set()); 
@@ -19,11 +22,14 @@ const Map = ({ googleMapsApiKey }) => {
   const [markers, setMarkers] = useState([]);
   const [infoWindow, setInfoWindow] = useState(null);
 
+  // Utilizado para verificar si el mapa ya se ha inicializado
   const mapInitializedRef = useRef(false);
 
   useEffect(() => {
+    // Obtener el elemento del mapa por su ID
     const mapElement = document.getElementById('map');
 
+    // Verificar si el elemento del mapa y la API de Google están disponibles
     if (mapElement && window.google) {
       const { google } = window;
       const { search } = location;
@@ -32,13 +38,15 @@ const Map = ({ googleMapsApiKey }) => {
       const lng = parseFloat(params.get('lng')) || 0;
       const currentAddress = params.get('address');
 
+      // Verificar si hay coordenadas y dirección en la URL
       if (!isNaN(lat) && !isNaN(lng) && currentAddress) {
         setAddress(currentAddress);
-        setSearchHistory((prevHistory) => new Set(prevHistory).add(currentAddress)); // Añadir al conjunto
+        setSearchHistory((prevHistory) => new Set(prevHistory).add(currentAddress));
       }
 
       let newMap = map;
 
+      // Crear un nuevo mapa si no existe, de lo contrario, centrarlo en las coordenadas dadas
       if (!map) {
         newMap = new google.maps.Map(mapElement, {
           center: { lat, lng },
@@ -51,15 +59,18 @@ const Map = ({ googleMapsApiKey }) => {
         newMap.setZoom(8);
       }
 
+      // Inicializar la ventana de información del marcador
       setInfoWindow(new google.maps.InfoWindow({ maxWidth: 350 }));
     }
   }, [location, googleMapsApiKey, map]);
 
+  // Limpiar los marcadores en el mapa
   const clearMarkers = () => {
     markers.forEach((marker) => marker.setMap(null));
     setMarkers([]);
   };
 
+  // Agregar un marcador al mapa
   const addMarker = (location) => {
     const { google } = window;
 
@@ -73,6 +84,7 @@ const Map = ({ googleMapsApiKey }) => {
 
     setMarkers((prevMarkers) => [...prevMarkers, newMarker]);
 
+    // Agregar un evento de clic al marcador para mostrar la información
     google.maps.event.addListener(newMarker, 'click', function () {
       const content = `<div><h3>${location.name}</h3><p>${location.address}<br><a href="${location.url}">Get Directions</a></p></div>`;
       infoWindow.setContent(content);
@@ -80,6 +92,7 @@ const Map = ({ googleMapsApiKey }) => {
     });
   };
 
+  // Ajustar el zoom del mapa para incluir todos los marcadores
   useEffect(() => {
     if (markers.length > 0) {
       const bounds = new window.google.maps.LatLngBounds();
@@ -88,6 +101,7 @@ const Map = ({ googleMapsApiKey }) => {
     }
   }, [markers, map]);
 
+  // búsqueda de direcciones
   const handleSearch = async () => {
     if (address.trim() !== '') {
       const geocoder = new google.maps.Geocoder();
@@ -109,10 +123,11 @@ const Map = ({ googleMapsApiKey }) => {
         }
       });
 
-      setSearchHistory((prevHistory) => new Set(prevHistory).add(address)); 
+      setSearchHistory((prevHistory) => new Set(prevHistory).add(address));
     }
   };
 
+  // Manejar el cambio en la entrada de texto de dirección
   const handleChange = (e) => {
     const newAddress = e.target.value;
     setAddress(newAddress);
